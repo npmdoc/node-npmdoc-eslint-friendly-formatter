@@ -1,4 +1,4 @@
-<div class="apidocDiv">
+<html><head></head><body><div class="apidocDiv">
 <style>
 /*csslint
 */
@@ -47,17 +47,10 @@
 }
 </style>
 <h1>api documentation for
-    <a
-
-        href="https://github.com/royriojas/eslint-friendly-formatter#readme"
-
-    >eslint-friendly-formatter (v2.0.7)</a>
+    <a href="https://github.com/royriojas/eslint-friendly-formatter#readme">eslint-friendly-formatter (v2.0.7)</a>
 </h1>
 <h4> simple formatter/reporter for eslint that's friendly with Sublime Text and iterm2 'click to open file' functionality</h4>
-<div class="apidocSectionDiv"><a
-    href="#apidoc.tableOfContents"
-    id="apidoc.tableOfContents"
-><h1>table of contents</h1></a><ol>
+<div class="apidocSectionDiv"><a href="#apidoc.tableOfContents" id="apidoc.tableOfContents"><h1>table of contents</h1></a><ol>
 
     <li class="apidocModuleLi"><a href="#apidoc.module.eslint-friendly-formatter">module eslint-friendly-formatter</a><ol>
 
@@ -87,23 +80,23 @@
     <ul>
     <li>description and source-code<pre class="apidocCodePre">eslint-friendly-formatter = function (results) {
 
-  var output = &#x27;\n&#x27;,
+  var output = '\n',
     total = 0,
     errors = 0,
     warnings = 0,
-    summaryColor = &#x27;yellow&#x27;;
+    summaryColor = 'yellow';
 
   results = results || [];
 
   var entries = [];
 
-  var absolutePathsToFile = parseBoolEnvVar(&#x27;EFF_ABSOLUTE_PATHS&#x27;);
+  var absolutePathsToFile = parseBoolEnvVar('EFF_ABSOLUTE_PATHS');
 
-  var restArgs = process.argv.slice(process.argv.indexOf(&#x27;--&#x27;) + 1);
+  var restArgs = process.argv.slice(process.argv.indexOf('--') + 1);
   var parsedArgs = minimist(restArgs);
 
-  var groupByIssue = parsedArgs[&#x27;eff-by-issue&#x27;];
-  var filterRule = parsedArgs[&#x27;eff-filter&#x27;];
+  var groupByIssue = parsedArgs['eff-by-issue'];
+  var filterRule = parsedArgs['eff-filter'];
 
   var errorsHash = { };
   var warningsHash = { };
@@ -118,18 +111,18 @@
   });
 
   entries.sort(function(a, b) {
-    if (a.severity &#x3e; b.severity) {
+    if (a.severity &gt; b.severity) {
       return 1;
     }
-    if (a.severity &#x3c; b.severity) {
+    if (a.severity &lt; b.severity) {
       return -1;
     }
 
     if (groupByIssue) {
-      if (a.ruleId &#x3e; b.ruleId) {
+      if (a.ruleId &gt; b.ruleId) {
         return 1;
       }
-      if (a.ruleId &#x3c; b.ruleId) {
+      if (a.ruleId &lt; b.ruleId) {
         return -1;
       }
     }
@@ -139,17 +132,17 @@
       return pathSort;
     }
 
-    if (a.line &#x3e; b.line) {
+    if (a.line &gt; b.line) {
       return 1;
     }
-    if (a.line &#x3c; b.line) {
+    if (a.line &lt; b.line) {
       return -1;
     }
 
-    if (a.column &#x3e; b.column) {
+    if (a.column &gt; b.column) {
       return 1;
     }
-    if (a.column &#x3c; b.column) {
+    if (a.column &lt; b.column) {
       return -1;
     }
 
@@ -167,12 +160,12 @@
           }
 
           if (message.fatal || message.severity === 2) {
-            messageType = chalk.red(&#x27;✘&#x27;);
-            summaryColor = &#x27;red&#x27;;
+            messageType = chalk.red('âœ˜');
+            summaryColor = 'red';
             errorsHash[message.ruleId] = (errorsHash[message.ruleId] || 0) + 1;
             errors++;
           } else {
-            messageType = chalk.yellow(&#x27;⚠&#x27;);
+            messageType = chalk.yellow('âš&nbsp;');
             warningsHash[message.ruleId] = (warningsHash[message.ruleId] || 0) + 1;
             warnings++;
           }
@@ -180,70 +173,70 @@
           var line = message.line || 0;
           var column = message.column || 0;
 
-          var arrow = &#x27;&#x27;;
-          var hasSource = message.source !== undefined &#x26;&#x26; message.source.length &#x3c; 1000;
+          var arrow = '';
+          var hasSource = message.source !== undefined &amp;&amp; message.source.length &lt; 1000;
           if (hasSource) {
-            for (var i = 0; i &#x3c; message.column; i++) {
-              if (message.source.charAt(i) === &#x27;\t&#x27;) {
-                arrow += &#x27;\t&#x27;;
+            for (var i = 0; i &lt; message.column; i++) {
+              if (message.source.charAt(i) === '\t') {
+                arrow += '\t';
               } else {
-                arrow += &#x27; &#x27;;
+                arrow += ' ';
               }
             }
-            arrow += &#x27;^&#x27;;
+            arrow += '^';
           }
 
           var filePath = message.filePath;
           var link = getFileLink(filePath, line, column);
-          var filename = subtleLog(filePath + &#x27;:&#x27; + line + &#x27;:&#x27; + column);
+          var filename = subtleLog(filePath + ':' + line + ':' + column);
 
           seq.push([
-            &#x27;&#x27;,
-            messageType + &#x27;  &#x27; + getKeyLink(message.ruleId || &#x27;&#x27;),
-            message.message.replace(/\.$/, &#x27;&#x27;),
-            &#x27;$MARKER$  &#x27; + (link === false ? chalk.underline(filename) : filename) +
-              (link === false ? &#x27;&#x27; : &#x27;$MARKER$  &#x27; + chalk.underline(subtleLog(link))) + &#x27;$MARKER$  &#x27; +
-              (hasSource ? subtleLog(message.source) + &#x27;$MARKER$  &#x27; + subtleLog(arrow) : &#x27;&#x27;) + &#x27;$MARKER$&#x27;
+            '',
+            messageType + '  ' + getKeyLink(message.ruleId || ''),
+            message.message.replace(/\.$/, ''),
+            '$MARKER$  ' + (link === false ? chalk.underline(filename) : filename) +
+              (link === false ? '' : '$MARKER$  ' + chalk.underline(subtleLog(link))) + '$MARKER$  ' +
+              (hasSource ? subtleLog(message.source) + '$MARKER$  ' + subtleLog(arrow) : '') + '$MARKER$'
           ]);
           return seq;
         }, []), {
           align: [
-            &#x27;&#x27;,
-            &#x27;l&#x27;,
-            &#x27;l&#x27;,
-            &#x27;l&#x27;
+            '',
+            'l',
+            'l',
+            'l'
           ],
           stringLength: function(str) {
             return chalk.stripColor(str).length;
           }
-        }).replace(/\$MARKER\$/g, &#x27;\n&#x27;) + &#x27;\n\n&#x27;;
+        }).replace(/\$MARKER\$/g, '\n') + '\n\n';
 
   total = entries.length;
 
-  if (total &#x3e; 0) {
+  if (total &gt; 0) {
     output += chalk[summaryColor].bold([
-      &#x27;✘ &#x27;,
+      'âœ˜ ',
       total,
-      pluralize(&#x27; problem&#x27;, total),
-      &#x27; (&#x27;,
+      pluralize(' problem', total),
+      ' (',
       errors,
-      pluralize(&#x27; error&#x27;, errors),
-      &#x27;, &#x27;,
+      pluralize(' error', errors),
+      ', ',
       warnings,
-      pluralize(&#x27; warning&#x27;, warnings),
-      &#x27;)\n&#x27;
-    ].join(&#x27;&#x27;));
+      pluralize(' warning', warnings),
+      ')\n'
+    ].join(''));
 
-    if (errors &#x3e; 0) {
-      output += printSummary(errorsHash, &#x27;Errors&#x27;, &#x27;red&#x27;);
+    if (errors &gt; 0) {
+      output += printSummary(errorsHash, 'Errors', 'red');
     }
 
-    if (warnings &#x3e; 0) {
-      output += printSummary(warningsHash, &#x27;Warnings&#x27;, &#x27;yellow&#x27;);
+    if (warnings &gt; 0) {
+      output += printSummary(warningsHash, 'Warnings', 'yellow');
     }
   }
 
-  return total &#x3e; 0 ? output : &#x27;&#x27;;
+  return total &gt; 0 ? output : '';
 }</pre></li>
     <li>example usage<pre class="apidocCodePre">n/a</pre></li>
     </ul>
@@ -257,3 +250,4 @@
     ]
 </div>
 </div>
+</body></html>

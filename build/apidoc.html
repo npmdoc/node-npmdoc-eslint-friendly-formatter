@@ -61,12 +61,193 @@
 
     <li class="apidocModuleLi"><a href="#apidoc.module.eslint-friendly-formatter">module eslint-friendly-formatter</a><ol>
 
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.eslint-friendly-formatter.eslint-friendly-formatter">
+            function <span class="apidocSignatureSpan"></span>eslint-friendly-formatter
+            <span class="apidocSignatureSpan">(results)</span>
+            </a>
+
+        </li>
+
     </ol></li>
 
 </ol></div>
 
 <div class="apidocSectionDiv">
 <h1><a href="#apidoc.module.eslint-friendly-formatter" id="apidoc.module.eslint-friendly-formatter">module eslint-friendly-formatter</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.eslint-friendly-formatter.eslint-friendly-formatter" id="apidoc.element.eslint-friendly-formatter.eslint-friendly-formatter">
+        function <span class="apidocSignatureSpan"></span>eslint-friendly-formatter
+        <span class="apidocSignatureSpan">(results)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">eslint-friendly-formatter = function (results) {
+
+  var output = &#x27;\n&#x27;,
+    total = 0,
+    errors = 0,
+    warnings = 0,
+    summaryColor = &#x27;yellow&#x27;;
+
+  results = results || [];
+
+  var entries = [];
+
+  var absolutePathsToFile = parseBoolEnvVar(&#x27;EFF_ABSOLUTE_PATHS&#x27;);
+
+  var restArgs = process.argv.slice(process.argv.indexOf(&#x27;--&#x27;) + 1);
+  var parsedArgs = minimist(restArgs);
+
+  var groupByIssue = parsedArgs[&#x27;eff-by-issue&#x27;];
+  var filterRule = parsedArgs[&#x27;eff-filter&#x27;];
+
+  var errorsHash = { };
+  var warningsHash = { };
+
+  results.forEach(function(result) {
+    var messages = result.messages || [];
+    entries = entries.concat(messages.map(function(message) {
+      return extend({
+        filePath: absolutePathsToFile ? path.resolve(result.filePath) : result.filePath
+      }, message);
+    }));
+  });
+
+  entries.sort(function(a, b) {
+    if (a.severity &#x3e; b.severity) {
+      return 1;
+    }
+    if (a.severity &#x3c; b.severity) {
+      return -1;
+    }
+
+    if (groupByIssue) {
+      if (a.ruleId &#x3e; b.ruleId) {
+        return 1;
+      }
+      if (a.ruleId &#x3c; b.ruleId) {
+        return -1;
+      }
+    }
+
+    var pathSort = a.filePath.localeCompare(b.filePath);
+    if (pathSort) {
+      return pathSort;
+    }
+
+    if (a.line &#x3e; b.line) {
+      return 1;
+    }
+    if (a.line &#x3c; b.line) {
+      return -1;
+    }
+
+    if (a.column &#x3e; b.column) {
+      return 1;
+    }
+    if (a.column &#x3c; b.column) {
+      return -1;
+    }
+
+    return 0;
+  });
+
+  output += table(
+        entries.reduce(function(seq, message) {
+          var messageType;
+
+          if (filterRule) {
+            if (message.ruleId !== filterRule) {
+              return seq;
+            }
+          }
+
+          if (message.fatal || message.severity === 2) {
+            messageType = chalk.red(&#x27;✘&#x27;);
+            summaryColor = &#x27;red&#x27;;
+            errorsHash[message.ruleId] = (errorsHash[message.ruleId] || 0) + 1;
+            errors++;
+          } else {
+            messageType = chalk.yellow(&#x27;⚠&#x27;);
+            warningsHash[message.ruleId] = (warningsHash[message.ruleId] || 0) + 1;
+            warnings++;
+          }
+
+          var line = message.line || 0;
+          var column = message.column || 0;
+
+          var arrow = &#x27;&#x27;;
+          var hasSource = message.source !== undefined &#x26;&#x26; message.source.length &#x3c; 1000;
+          if (hasSource) {
+            for (var i = 0; i &#x3c; message.column; i++) {
+              if (message.source.charAt(i) === &#x27;\t&#x27;) {
+                arrow += &#x27;\t&#x27;;
+              } else {
+                arrow += &#x27; &#x27;;
+              }
+            }
+            arrow += &#x27;^&#x27;;
+          }
+
+          var filePath = message.filePath;
+          var link = getFileLink(filePath, line, column);
+          var filename = subtleLog(filePath + &#x27;:&#x27; + line + &#x27;:&#x27; + column);
+
+          seq.push([
+            &#x27;&#x27;,
+            messageType + &#x27;  &#x27; + getKeyLink(message.ruleId || &#x27;&#x27;),
+            message.message.replace(/\.$/, &#x27;&#x27;),
+            &#x27;$MARKER$  &#x27; + (link === false ? chalk.underline(filename) : filename) +
+              (link === false ? &#x27;&#x27; : &#x27;$MARKER$  &#x27; + chalk.underline(subtleLog(link))) + &#x27;$MARKER$  &#x27; +
+              (hasSource ? subtleLog(message.source) + &#x27;$MARKER$  &#x27; + subtleLog(arrow) : &#x27;&#x27;) + &#x27;$MARKER$&#x27;
+          ]);
+          return seq;
+        }, []), {
+          align: [
+            &#x27;&#x27;,
+            &#x27;l&#x27;,
+            &#x27;l&#x27;,
+            &#x27;l&#x27;
+          ],
+          stringLength: function(str) {
+            return chalk.stripColor(str).length;
+          }
+        }).replace(/\$MARKER\$/g, &#x27;\n&#x27;) + &#x27;\n\n&#x27;;
+
+  total = entries.length;
+
+  if (total &#x3e; 0) {
+    output += chalk[summaryColor].bold([
+      &#x27;✘ &#x27;,
+      total,
+      pluralize(&#x27; problem&#x27;, total),
+      &#x27; (&#x27;,
+      errors,
+      pluralize(&#x27; error&#x27;, errors),
+      &#x27;, &#x27;,
+      warnings,
+      pluralize(&#x27; warning&#x27;, warnings),
+      &#x27;)\n&#x27;
+    ].join(&#x27;&#x27;));
+
+    if (errors &#x3e; 0) {
+      output += printSummary(errorsHash, &#x27;Errors&#x27;, &#x27;red&#x27;);
+    }
+
+    if (warnings &#x3e; 0) {
+      output += printSummary(warningsHash, &#x27;Warnings&#x27;, &#x27;yellow&#x27;);
+    }
+  }
+
+  return total &#x3e; 0 ? output : &#x27;&#x27;;
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
 
 </div>
 
